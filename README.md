@@ -1,4 +1,4 @@
-# Styled Components Example
+# Zeolife App
 
 <p>
   <!-- iOS -->
@@ -16,4 +16,4 @@
 
 ## 📝 Notes
 
-- [Styled Components docs](https://styled-components.com/)
+- 웹뷰를 띄어서 프론트엔드 서버와 연결하는 앱
