@@ -2,17 +2,15 @@ import React, { FC, useEffect, useRef, useState } from "react";
 import { Camera } from "expo-camera";
 import styled from "styled-components/native";
 import { 
+  Alert,
   BackHandler, 
   SafeAreaView, 
   Platform, 
   StatusBar, 
-  View, 
-  Text, 
-  TouchableOpacity, 
-  Button,
-  ImageBackground 
 } from "react-native";
 import { WebView } from 'react-native-webview';
+import SplashView from "./components/SplashView";
+import CameraView from "./components/CameraView";
 
 interface NavState {
   canGoBack: Boolean;
@@ -43,28 +41,25 @@ const INJECTED_CODE = `
 true;
 `;
 
-const RequestCameraPermissionButton = () => {
-  const [status, requestPermission] = Camera.useCameraPermissions();
-  return (
-    <View
-      style={{ flex: 1, justifyContent: "center", alignContent: "center" }}
-    >
-      <Text style={{ textAlign: "center" }}>
-        We need access to your camera
-      </Text>
-      <Button onPress={requestPermission} title="Grant permission" />
-    </View>
-  );
-}
-
 const App: FC = () => {
   const webviewRef = useRef<any>(null);
+  const [isAppReady, setIsAppReady] = useState<boolean>(false);
+  const [isWebViewReady, setIsWebviewReady] = useState<boolean>(false);
   const [navState, setNavState] = useState<NavState>();
-  const [alertPermission, setAlertPermission] = useState<boolean>(false);
-  const [status, requestPermission] = Camera.useCameraPermissions();
-  const [type, setType] = useState(Camera.Constants.Type.back);
-  const [lastPhotoURI, setLastPhotoURI] = useState(null);
-  const cameraRef = useRef(null);
+  const [requestCamera, setRequestCamera] = useState<boolean>(false);
+  const [status] = Camera.useCameraPermissions();
+  
+
+  useEffect(() => {
+    async function wait2s() {
+      try {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      } finally {
+        setIsAppReady(true);
+      }
+    }
+    wait2s();
+  }, []);
 
   useEffect(() => {
     const onPress = () => {
@@ -86,19 +81,6 @@ const App: FC = () => {
     }
   }, [navState?.canGoBack, webviewRef.current]);
 
-  if(!status?.granted) {
-    return (
-      <View
-        style={{ flex: 1, justifyContent: "center", alignContent: "center" }}
-      >
-        <Text style={{ textAlign: "center" }}>
-          We need access to your camera
-        </Text>
-        <Button onPress={requestPermission} title="Grant permission" />
-      </View>
-    );
-  }
-
   return (
       <Container os={Platform.OS}>
         <WebView
@@ -112,6 +94,14 @@ const App: FC = () => {
           originWhitelist={["*"]}
           onNavigationStateChange={setNavState}
           onLoadStart={() => webviewRef.current?.injectJavaScript(INJECTED_CODE)}
+          onLoadEnd={() => setIsWebviewReady(true)}
+          onError={(syntheticEvent) => {
+            Alert.alert(
+              'Zerolife 오류',
+              '서버와 연결이 되지 않습니다. 어플리케이션을 종료합니다.',
+              [ { text: "OK", onPress: () => BackHandler.exitApp()} ]
+            )
+          }}
           onMessage={({nativeEvent}) => {
             const { type } = JSON.parse(nativeEvent.data);
             console.log(nativeEvent.data);
@@ -120,85 +110,18 @@ const App: FC = () => {
             }
 
             if (type === 'REQ_CAMERA_PERMISSION') {
-              setAlertPermission(true);
+              setRequestCamera(true);
             }
           }}
-          source={{ uri: 'http://192.168.0.31:3000/test' }}
+          source={{ uri: 'http://192.168.0.31:3000/splash' }}
         />
-        {alertPermission && 
-        <View
-          style={{
-            position: "absolute",
-            width: "100%",
-            height: "100%",
-            backgroundColor: "transparent",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Camera 
-            style={{ width: "70%", height: "50%", alignItems: "center", justifyContent: "center", }}
-            type={type} 
-            ref={cameraRef}
-          >
-            <View
-              style={{
-                backgroundColor: "transparent",
-                flexDirection: "row",
-                top: "-10%",
-                width: "50%",
-                height: "50%",
-                opacity: 0.5 
-              }}
-            >
-              <ImageBackground
-                source={require('./pngwing.com.png')}
-                style={{
-                  flex: 1,
-                  backgroundColor: "transparent",
-                }}
-              />
-            </View>
-          </Camera>
-          <TouchableOpacity
-              style={{
-                alignItems: "center",
-                position: "absolute",
-                top: "60%",
-                width: 60,
-                height: 60,
-              }}
-              onPress={async () => {
-                if (cameraRef.current) {
-                  let photo = await cameraRef.current.takePictureAsync();
-                  setLastPhotoURI(photo.uri);
-                  console.log(photo.uri);
-
-                  webviewRef.current?.postMessage(
-                    JSON.stringify({
-                      type: "PICTURE", 
-                      message: "Hello RN Webview2",
-                      file: { uri: photo.uri, name: `picture-[${Date.now()}].jpg`, type: 'image/jpg' }
-                    })
-                  );
-                  setAlertPermission(false);
-                  console.log("Send!!");
-                }
-              }}
-            >
-              <View 
-                style={{ 
-                  backgroundColor: "red", 
-                  borderWidth: 8,
-                  borderColor: "grey",
-                  borderRadius: 50,
-                  width: 60,
-                  height: 60,
-                  position: "absolute",
-                }}
-              />
-            </TouchableOpacity>
-        </View>}
+        {(!isAppReady || !isWebViewReady || !status?.granted) && <SplashView />}
+        {requestCamera && 
+          <CameraView 
+            webviewRef={webviewRef}
+            setRequestCamera={setRequestCamera}
+          />
+        }
       </Container>
   );
  }
