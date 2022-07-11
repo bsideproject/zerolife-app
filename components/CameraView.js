@@ -4,28 +4,35 @@ import styled from "styled-components/native";
 import { 
   View, 
   TouchableOpacity, 
-  ImageBackground 
+  Image,
+  ImageBackground, 
+  Text
 } from "react-native";
 
 const CameraView = (props) => {
     const { setRequestCamera, webviewRef } = props;
     const [type, setType] = useState(Camera.Constants.Type.back);
-    const [lastPhotoURI, setLastPhotoURI] = useState(null);
     const cameraRef = useRef(null);
 
     return (
         <View
           style={{
-            position: "absolute",
+            position: "relative",
             width: "100%",
             height: "100%",
-            backgroundColor: "transparent",
+            backgroundColor: "white",
             alignItems: "center",
             justifyContent: "center",
           }}
         >
           <Camera 
-            style={{ width: "70%", height: "50%", alignItems: "center", justifyContent: "center", }}
+            style={{ 
+              width: "100%", 
+              alignItems: "center", 
+              justifyContent: "center", 
+              aspectRatio: 1
+            }}
+            ratio={"1:1"}
             type={type} 
             ref={cameraRef}
           >
@@ -48,25 +55,47 @@ const CameraView = (props) => {
               />
             </View>
           </Camera>
+          <View
+            style={{
+              position: "absolute",
+              top: "85%"
+            }}
+          >
+            <Text
+              style={{
+                color: "#000000",
+                fontWeight: "500",
+                fontSize: 16,
+                lineHeight: 24
+              }}
+            >
+              프레임 모양에 맞춰 찍어주세요!
+            </Text>
+          </View>
           <TouchableOpacity
               style={{
                 alignItems: "center",
                 position: "absolute",
-                top: "60%",
+                top: "90%",
                 width: 60,
                 height: 60,
               }}
               onPress={async () => {
                 if (cameraRef.current) {
-                  let photo = await cameraRef.current.takePictureAsync();
-                  setLastPhotoURI(photo.uri);
-                  console.log(photo.uri);
+                  let photo = await cameraRef.current.takePictureAsync({
+                    base64: true
+                  });
+                  const { base64, ...less } = photo;
+                  console.log(less);
 
                   webviewRef.current?.postMessage(
                     JSON.stringify({
-                      type: "PICTURE", 
-                      message: "Hello RN Webview2",
-                      file: { uri: photo.uri, name: `picture-[${Date.now()}].jpg`, type: 'image/jpg' }
+                      type: 'image/jpg', 
+                      file: { 
+                        name: `picture-[${Date.now()}].jpg`, 
+                        type: 'image/jpg',
+                        ...photo
+                      }
                     })
                   );
                   setRequestCamera(false);
@@ -74,15 +103,12 @@ const CameraView = (props) => {
                 }
               }}
             >
-              <View 
-                style={{ 
-                  backgroundColor: "red", 
-                  borderWidth: 8,
-                  borderColor: "grey",
+              <Image
+                source={require('../assets/camera.png')}
+                style={{
                   borderRadius: 50,
                   width: 60,
                   height: 60,
-                  position: "absolute",
                 }}
               />
             </TouchableOpacity>

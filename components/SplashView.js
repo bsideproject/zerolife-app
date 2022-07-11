@@ -17,7 +17,7 @@ const SplashView = (props) => {
                 [ { text: "확인", onPress: requestPermission} ]
             )
         }
-    },[status]);
+    }, [status]);
 
     return (
         <View
@@ -32,7 +32,7 @@ const SplashView = (props) => {
                 source={require('../assets/splash.png')}
                 style={{
                     flex: 1,
-                    backgroundColor: "transparent",
+                    backgroundColor: "transparent"
                 }}
             />
         </View>

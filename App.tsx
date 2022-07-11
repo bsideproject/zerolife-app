@@ -113,9 +113,9 @@ const App: FC = () => {
               setRequestCamera(true);
             }
           }}
-          source={{ uri: 'http://192.168.0.31:3000/splash' }}
+          source={{ uri: 'http://192.168.0.31:3000/today-mission' }}
         />
-        {(!isAppReady || !isWebViewReady || !status?.granted) && <SplashView />}
+        {/* {(!isAppReady || !isWebViewReady || !status?.granted) && <SplashView />} */}
         {requestCamera && 
           <CameraView 
             webviewRef={webviewRef}
