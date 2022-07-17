@@ -1,5 +1,6 @@
 import React, { FC, useEffect, useRef, useState } from "react";
 import { Camera } from "expo-camera";
+import { manipulateAsync, FlipType, SaveFormat } from 'expo-image-manipulator';
 import styled from "styled-components/native";
 import { 
   View, 
@@ -82,19 +83,27 @@ const CameraView = (props) => {
               }}
               onPress={async () => {
                 if (cameraRef.current) {
-                  let photo = await cameraRef.current.takePictureAsync({
-                    base64: true
-                  });
-                  const { base64, ...less } = photo;
-                  console.log(less);
+                  let photo = await cameraRef.current.takePictureAsync();
+                  const manipResult = await manipulateAsync(
+                    photo.uri,
+                    [
+                      { resize: {height: 512, width: 512} }
+                    ],
+                    { 
+                      base64: true,
+                      compress: 1, 
+                      format: SaveFormat.JPEG 
+                    }
+                  );
 
                   webviewRef.current?.postMessage(
                     JSON.stringify({
                       type: 'image/jpg', 
                       file: { 
-                        name: `picture-[${Date.now()}].jpg`, 
-                        type: 'image/jpg',
-                        ...photo
+                        name: `picture-[${Date.now()}].jpeg`, 
+                        type: 'image/jpeg',
+                        ...photo,
+                        base64: manipResult.base64
                       }
                     })
                   );
