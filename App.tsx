@@ -47,6 +47,8 @@ const App: FC = () => {
   const [isWebViewReady, setIsWebviewReady] = useState<boolean>(false);
   const [navState, setNavState] = useState<NavState>();
   const [requestCamera, setRequestCamera] = useState<boolean>(false);
+  const [guideImageUrl, setGuideImageUrl] = useState<string>();
+  const [method, setMethod] = useState<string>();
   const [status] = Camera.useCameraPermissions();
   
 
@@ -103,7 +105,7 @@ const App: FC = () => {
             )
           }}
           onMessage={({nativeEvent}) => {
-            const { type } = JSON.parse(nativeEvent.data);
+            const { type, guideImageUrl, method } = JSON.parse(nativeEvent.data);
             console.log(nativeEvent.data);
             if (type === 'NAV_STATE_CHANGE') {
               setNavState(nativeEvent)
@@ -111,14 +113,19 @@ const App: FC = () => {
 
             if (type === 'REQ_CAMERA_PERMISSION') {
               setRequestCamera(true);
+              setGuideImageUrl(guideImageUrl);
+              setMethod(method);
             }
           }}
-          source={{ uri: 'http://192.168.0.31:3000/today-mission' }}
+          source={{ uri: 'http://192.168.0.31:3000/daily-mission' }}
         />
         {/* {(!isAppReady || !isWebViewReady || !status?.granted) && <SplashView />} */}
         {requestCamera && 
           <CameraView 
             webviewRef={webviewRef}
+            guideImageUrl={guideImageUrl}
+            method={method}
+            requestCamera={requestCamera}
             setRequestCamera={setRequestCamera}
           />
         }
