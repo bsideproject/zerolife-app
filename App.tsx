@@ -5,12 +5,13 @@ import {
   Alert,
   BackHandler, 
   SafeAreaView, 
-  Platform, 
-  StatusBar, 
+  Platform,
+  ToastAndroid
 } from "react-native";
 import { WebView } from 'react-native-webview';
 import SplashView from "./components/SplashView";
 import CameraView from "./components/CameraView";
+import DoubleTapToClose from "./components/DoubleTapToClose";
 
 interface NavState {
   canGoBack: Boolean;
@@ -49,6 +50,7 @@ const App: FC = () => {
   const [requestCamera, setRequestCamera] = useState<boolean>(false);
   const [guideImageUrl, setGuideImageUrl] = useState<string>();
   const [method, setMethod] = useState<string>();
+  const [exitApp, setExitApp] = useState(0);
   const [status] = Camera.useCameraPermissions();
   
 
@@ -62,26 +64,6 @@ const App: FC = () => {
     }
     wait2s();
   }, []);
-
-  useEffect(() => {
-    const onPress = () => {
-      if(navState?.canGoBack) {
-        webviewRef.current?.goBack?.();
-        /**
-         * When true is returned the event will not be bubbled up
-         * & no other back action will execute
-         */
-        return true;
-      } else {
-        return false;
-      }
-    }
-    
-    BackHandler.addEventListener('hardwareBackPress', onPress);
-    return () => {
-      BackHandler.removeEventListener('hardwareBackPress', onPress);
-    }
-  }, [navState?.canGoBack, webviewRef.current]);
 
   return (
       <Container os={Platform.OS}>
@@ -117,7 +99,8 @@ const App: FC = () => {
               setMethod(method);
             }
           }}
-          source={{ uri: 'https://zerolife.shop' }}
+          // source={{ uri: 'https://zerolife.shop' }}
+          source={{ uri: 'http://192.168.0.31:3000' }}
         />
         {/* {(!isAppReady || !isWebViewReady || !status?.granted) && <SplashView />} */}
         {requestCamera && 
@@ -129,6 +112,10 @@ const App: FC = () => {
             setRequestCamera={setRequestCamera}
           />
         }
+        <DoubleTapToClose 
+          requestCamera={requestCamera} 
+          setRequestCamera={setRequestCamera}
+        />
       </Container>
   );
  }
@@ -137,5 +124,5 @@ const App: FC = () => {
 
 const Container = styled(SafeAreaView)<{ os: string }>`
   flex: 1;
-  padding-top: ${props => props.os === 'android' ? StatusBar.currentHeight : 0 }px;
+
 `;
