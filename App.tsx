@@ -99,8 +99,7 @@ const App: FC = () => {
               setMethod(method);
             }
           }}
-          // source={{ uri: 'https://zerolife.shop' }}
-          source={{ uri: 'http://192.168.0.31:3000' }}
+          source={{ uri: 'https://zerolife.shop' }}
         />
         {/* {(!isAppReady || !isWebViewReady || !status?.granted) && <SplashView />} */}
         {requestCamera && 
